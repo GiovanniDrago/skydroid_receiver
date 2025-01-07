@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_uvc_camera/flutter_uvc_camera.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+import '../utils/permission_utils.dart';
+
 class HomeBody extends StatefulWidget {
   const HomeBody({super.key});
 
@@ -57,40 +59,11 @@ class _HomeBodyState extends State<HomeBody>
     });
   }
 
-  Future<bool> _requestPermission() async {
-    if (Platform.isAndroid) {
-      if (await _isAndroid13OrHigher()) {
-        // For Android 13 and above
-        Map<Permission, PermissionStatus> statuses = await [
-          Permission.photos,
-          Permission.videos,
-        ].request();
-        return statuses.values.every((status) => status.isGranted);
-      } else {
-        // For Android 12 and below
-        Map<Permission, PermissionStatus> statuses = await [
-          Permission.storage,
-          Permission.manageExternalStorage,
-        ].request();
-        return statuses.values.every((status) => status.isGranted);
-      }
-    }
-    return true;
-  }
-
-  Future<bool> _isAndroid13OrHigher() async {
-    if (Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      return androidInfo.version.sdkInt >= 33;
-    }
-    return false;
-  }
-
   // Add method to capture and save image
   Future<void> _captureImage() async {
     try {
       // Check permission first
-      if (!await _requestPermission()) {
+      if (!await PermissionUtils.requestStoragePermission()) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Storage permission is required')),
         );
