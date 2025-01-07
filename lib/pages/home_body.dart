@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_uvc_camera/flutter_uvc_camera.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+import '../utils/capture_image.dart';
 import '../utils/permission_utils.dart';
 
 class HomeBody extends StatefulWidget {
@@ -59,40 +60,6 @@ class _HomeBodyState extends State<HomeBody>
     });
   }
 
-  // Add method to capture and save image
-  Future<void> _captureImage() async {
-    try {
-      // Check permission first
-      if (!await PermissionUtils.requestStoragePermission()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Storage permission is required')),
-        );
-        return;
-      }
-
-      // Capture the frame and get the saved path
-      final String? savedPath = await cameraController?.takePicture();
-
-      if (savedPath != null) {
-        // Show success message with the actual path
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image saved to: $savedPath')),
-        );
-      } else {
-        // Handle case where no path was returned
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Failed to capture image: No path returned')),
-        );
-      }
-    } catch (e) {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to capture image: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.height;
@@ -133,7 +100,7 @@ class _HomeBodyState extends State<HomeBody>
               child: const Icon(Icons.photo_camera),
               onPressed: () {
                 // Photo capture logic
-                _captureImage();
+                CaptureImage.captureImage(context, cameraController);
                 _handleMenuToggle();
               },
             ),
