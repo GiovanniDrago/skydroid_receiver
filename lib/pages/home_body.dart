@@ -1,12 +1,8 @@
-import 'dart:io';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_uvc_camera/flutter_uvc_camera.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:skydroid_receiver/utils/capture_video.dart';
 
 import '../utils/capture_image.dart';
-import '../utils/permission_utils.dart';
 
 class HomeBody extends StatefulWidget {
   const HomeBody({super.key});
@@ -15,12 +11,13 @@ class HomeBody extends StatefulWidget {
   State<HomeBody> createState() => _HomeBodyState();
 }
 
-class _HomeBodyState extends State<HomeBody>
-    with SingleTickerProviderStateMixin {
+class _HomeBodyState extends State<HomeBody> with TickerProviderStateMixin {
   UVCCameraController? cameraController;
   bool isMenuOpen = false;
-  bool isAnimating = false; // Add this flag
+  bool isAnimating = false;
+  bool isRecording = false;
   late AnimationController _animationController;
+  late AnimationController _recordingAnimationController;
 
   @override
   void initState() {
@@ -32,11 +29,17 @@ class _HomeBodyState extends State<HomeBody>
       duration: const Duration(milliseconds: 300),
       value: isMenuOpen ? 1 : 0,
     );
+    _recordingAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      value: isRecording ? 1 : 0,
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose(); // Clean up
+    _recordingAnimationController.dispose(); // Clean up
     super.dispose();
   }
 
@@ -101,17 +104,29 @@ class _HomeBodyState extends State<HomeBody>
               onPressed: () {
                 // Photo capture logic
                 CaptureImage.captureImage(context, cameraController);
-                _handleMenuToggle();
               },
             ),
             const SizedBox(height: 10),
             FloatingActionButton(
               heroTag: "btnVideo",
               mini: true,
-              child: const Icon(Icons.videocam),
+              child: AnimatedIcon(
+                  icon: AnimatedIcons.play_pause,
+                  progress: _recordingAnimationController),
               onPressed: () {
-                // Video recording logic
-                _handleMenuToggle();
+                setState(() {
+                  isRecording = !isRecording;
+                  if (isRecording) {
+                    _recordingAnimationController.forward().whenComplete(() {
+                      setState(() => isAnimating = false); // Animation complete
+                    });
+                  } else {
+                    _recordingAnimationController.reverse().whenComplete(() {
+                      setState(() => isAnimating = false); // Animation complete
+                    });
+                  }
+                  CaptureVideo.captureVideo(context, cameraController!);
+                });
               },
             ),
             const SizedBox(height: 10),
