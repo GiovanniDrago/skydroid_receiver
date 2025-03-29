@@ -1,0 +1,1 @@
+/home/takasu/Documents/codinglab/skydroid_receiver/build/app/intermediates/cxx/Debug/4762414r/obj/armeabi-v7a

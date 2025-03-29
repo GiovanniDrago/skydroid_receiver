@@ -31,4 +31,10 @@ class PermissionUtils {
     }
     return false;
   }
+
+  static Future<bool> requestStorageAndAudioPermission() async {
+    bool hasStoragePermission = await requestStoragePermission();
+    bool hasAudioPermission = await Permission.microphone.request().isGranted;
+    return hasStoragePermission && hasAudioPermission;
+  }
 }

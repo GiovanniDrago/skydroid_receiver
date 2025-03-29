@@ -125,7 +125,8 @@ class _HomeBodyState extends State<HomeBody> with TickerProviderStateMixin {
                       setState(() => isAnimating = false); // Animation complete
                     });
                   }
-                  CaptureVideo.captureVideo(context, cameraController!);
+                  CaptureVideo captureVideo = CaptureVideo.instance;
+                  captureVideo.captureVideo(context, cameraController!);
                 });
               },
             ),
