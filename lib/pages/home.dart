@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skydroid_receiver/pages/home_body.dart';
+import 'package:skydroid_receiver/utils/uvccamera_devices_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,7 +13,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: const HomeBody(),
+      body: UvcCameraDevicesScreen(),
     );
   }
 }
