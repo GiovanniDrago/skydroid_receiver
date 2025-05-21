@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uvccamera/uvccamera.dart';
 
@@ -245,11 +247,53 @@ class _UvcCameraWidgetState extends State<UvcCameraWidget>
   Future<void> _stopVideoRecording() async {
     final XFile outputFile = await _cameraController!.stopVideoRecording();
 
-    outputFile.length().then((length) {
+    // Get the DCIM directory
+    final String? dcimPath = await _getDCIMDirectory();
+    if (dcimPath == null) {
       setState(() {
-        _log = 'video file: ${outputFile.path} ($length bytes)\n$_log';
+        _log = 'Failed to get DCIM directory\n$_log';
       });
-    });
+      return;
+    }
+
+    // Create Skydroid directory if it doesn't exist
+    final Directory skydroidDir = Directory('$dcimPath/Skydroid');
+    if (!await skydroidDir.exists()) {
+      await skydroidDir.create(recursive: true);
+    }
+
+    // Generate a unique filename with timestamp
+    final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final String newPath = '${skydroidDir.path}/VID_$timestamp.mp4';
+
+    // Move the file
+    try {
+      await File(outputFile.path).copy(newPath);
+      await File(outputFile.path).delete(); // Delete the original file
+
+      outputFile.length().then((length) {
+        setState(() {
+          _log = 'video file moved to: $newPath ($length bytes)\n$_log';
+        });
+      });
+    } catch (e) {
+      setState(() {
+        _log = 'Failed to move video file: $e\n$_log';
+      });
+    }
+  }
+
+  Future<String?> _getDCIMDirectory() async {
+    if (Platform.isAndroid) {
+      // On Android, the DCIM directory is typically at /storage/emulated/0/DCIM
+      final Directory? externalDir = await getExternalStorageDirectory();
+      if (externalDir == null) return null;
+      
+      // Navigate up to the root of external storage
+      final String rootPath = externalDir.path.split('/Android')[0];
+      return '$rootPath/DCIM';
+    }
+    return null;
   }
 
   @override
